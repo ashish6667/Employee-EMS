@@ -1,6 +1,16 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, LogOut, User as UserIcon, Users, LayoutDashboard, Bell, Calendar } from 'lucide-react';
+import {
+  ShieldCheck,
+  LogOut,
+  User as UserIcon,
+  Users,
+  LayoutDashboard,
+  Building2,
+  DollarSign,
+  Terminal,
+  Calendar
+} from 'lucide-react';
 
 const Navbar = ({ activeView, setActiveView }) => {
   const { user, logout } = useAuth();
@@ -12,7 +22,7 @@ const Navbar = ({ activeView, setActiveView }) => {
         <div className="brand-icon">
           <ShieldCheck size={22} />
         </div>
-        AuthPortal & EMS
+        AuthPortal & Enterprise CMS
       </a>
 
       {user && (
@@ -29,7 +39,28 @@ const Navbar = ({ activeView, setActiveView }) => {
             onClick={() => setActiveView('employees')}
           >
             <Users size={18} />
-            Employee Management
+            Workforce Directory
+          </button>
+          <button
+            className={`nav-tab ${activeView === 'departments' ? 'active' : ''}`}
+            onClick={() => setActiveView('departments')}
+          >
+            <Building2 size={18} />
+            Departments
+          </button>
+          <button
+            className={`nav-tab ${activeView === 'payroll' ? 'active' : ''}`}
+            onClick={() => setActiveView('payroll')}
+          >
+            <DollarSign size={18} />
+            Payroll & Pay Bands
+          </button>
+          <button
+            className={`nav-tab ${activeView === 'audit' ? 'active' : ''}`}
+            onClick={() => setActiveView('audit')}
+          >
+            <Terminal size={18} />
+            Audit Logs
           </button>
         </nav>
       )}

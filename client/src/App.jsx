@@ -5,6 +5,9 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import EmployeeManager from './components/EmployeeManager';
+import DepartmentsView from './components/DepartmentsView';
+import PayrollView from './components/PayrollView';
+import AuditLogsView from './components/AuditLogsView';
 
 const MainContent = ({ activeView, setActiveView, isAddModalOpen, setIsAddModalOpen }) => {
   const { user, loading } = useAuth();
@@ -15,7 +18,7 @@ const MainContent = ({ activeView, setActiveView, isAddModalOpen, setIsAddModalO
       <div className="main-content">
         <div className="auth-card" style={{ textAlign: 'center', padding: '3rem' }}>
           <div className="spinner" style={{ margin: '0 auto 1rem auto', width: '32px', height: '32px' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>Authenticating...</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Authenticating Enterprise Session...</p>
         </div>
       </div>
     );
@@ -24,12 +27,22 @@ const MainContent = ({ activeView, setActiveView, isAddModalOpen, setIsAddModalO
   if (user) {
     return (
       <main className="main-content">
-        {activeView === 'employees' ? (
+        {activeView === 'employees' && (
           <EmployeeManager 
             isAddModalOpenFromParent={isAddModalOpen} 
             onCloseParentAddModal={() => setIsAddModalOpen(false)}
           />
-        ) : (
+        )}
+        {activeView === 'departments' && (
+          <DepartmentsView setActiveView={setActiveView} />
+        )}
+        {activeView === 'payroll' && (
+          <PayrollView setActiveView={setActiveView} />
+        )}
+        {activeView === 'audit' && (
+          <AuditLogsView />
+        )}
+        {activeView === 'dashboard' && (
           <Dashboard 
             setActiveView={setActiveView} 
             onOpenAddModal={() => setIsAddModalOpen(true)}
@@ -88,7 +101,7 @@ function App() {
         />
 
         <footer className="footer">
-          <p>© 2026 ASP.NET Core 10 Web API + React JS + Entity Framework Core + MySQL Employee Management System</p>
+          <p>© 2026 ASP.NET Core 10 Web API + MySQL + React Enterprise CMS System • Version 3.0.0 Enterprise</p>
         </footer>
       </div>
     </AuthProvider>
