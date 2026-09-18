@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
@@ -8,6 +8,8 @@ import EmployeeManager from './components/EmployeeManager';
 import DepartmentsView from './components/DepartmentsView';
 import PayrollView from './components/PayrollView';
 import AuditLogsView from './components/AuditLogsView';
+import CommandPalette from './components/CommandPalette';
+import api from './services/api';
 
 const MainContent = ({ activeView, setActiveView, isAddModalOpen, setIsAddModalOpen }) => {
   const { user, loading } = useAuth();
@@ -85,6 +87,49 @@ const MainContent = ({ activeView, setActiveView, isAddModalOpen, setIsAddModalO
 function App() {
   const [activeView, setActiveView] = useState('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('ems_theme') || 'light');
+  const [employeesList, setEmployeesList] = useState([]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ems_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    // Fetch employee list for Command Palette quick search
+    const fetchEmpList = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const res = await api.get('/employees');
+          setEmployeesList(res.data);
+        }
+      } catch (err) {
+        // Silent fail
+      }
+    };
+    fetchEmpList();
+  }, [activeView]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      const response = await api.get('/employees/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `employees_report_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('CSV Export failed', err);
+    }
+  };
 
   return (
     <AuthProvider>
@@ -92,7 +137,13 @@ function App() {
         <div className="orb orb-1"></div>
         <div className="orb orb-2"></div>
 
-        <Navbar activeView={activeView} setActiveView={setActiveView} />
+        <Navbar 
+          activeView={activeView} 
+          setActiveView={setActiveView}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          theme={theme}
+          toggleTheme={toggleTheme}
+        />
         <MainContent 
           activeView={activeView} 
           setActiveView={setActiveView} 
@@ -100,8 +151,19 @@ function App() {
           setIsAddModalOpen={setIsAddModalOpen}
         />
 
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+          setActiveView={setActiveView}
+          onOpenAddModal={() => setIsAddModalOpen(true)}
+          handleExportCsv={handleExportCsv}
+          toggleTheme={toggleTheme}
+          currentTheme={theme}
+          employees={employeesList}
+        />
+
         <footer className="footer">
-          <p>© 2026 ASP.NET Core 10 Web API + MySQL + React Enterprise CMS System • Version 3.0.0 Enterprise</p>
+          <p>© 2026 ASP.NET Core 10 Web API + MySQL + React Enterprise CMS System • Version 3.5.0 Enterprise Pro</p>
         </footer>
       </div>
     </AuthProvider>

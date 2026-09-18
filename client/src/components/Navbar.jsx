@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   ShieldCheck,
@@ -9,15 +9,21 @@ import {
   Building2,
   DollarSign,
   Terminal,
-  Calendar
+  Calendar,
+  Search,
+  Bell,
+  Sun,
+  Moon
 } from 'lucide-react';
+import NotificationDrawer from './NotificationDrawer';
 
-const Navbar = ({ activeView, setActiveView }) => {
+const Navbar = ({ activeView, setActiveView, onOpenCommandPalette, theme, toggleTheme }) => {
   const { user, logout } = useAuth();
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
-    <header className="navbar">
+    <header className="navbar" style={{ position: 'relative' }}>
       <a href="#" className="brand">
         <div className="brand-icon">
           <ShieldCheck size={22} />
@@ -67,6 +73,51 @@ const Navbar = ({ activeView, setActiveView }) => {
 
       {user && (
         <div className="nav-user">
+          {/* Command Palette Trigger */}
+          <button
+            className="action-btn"
+            onClick={onOpenCommandPalette}
+            style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}
+            title="Open Command Palette (Ctrl+K)"
+          >
+            <Search size={15} />
+            <span>Search (Ctrl+K)</span>
+          </button>
+
+          {/* Theme Switcher */}
+          <button
+            className="icon-btn-sm"
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            style={{ padding: '0.55rem' }}
+          >
+            {theme === 'dark' ? <Sun size={18} className="text-amber" /> : <Moon size={18} className="text-purple" />}
+          </button>
+
+          {/* Notifications Drawer Toggle */}
+          <div style={{ position: 'relative' }}>
+            <button
+              className="icon-btn-sm"
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              title="System Notifications"
+              style={{ padding: '0.55rem', position: 'relative' }}
+            >
+              <Bell size={18} />
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -2,
+                  right: -2,
+                  width: 8,
+                  height: 8,
+                  background: '#ef4444',
+                  borderRadius: '50%'
+                }}
+              />
+            </button>
+            <NotificationDrawer isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+          </div>
+
           <div className="nav-date-pill">
             <Calendar size={15} />
             <span>{todayDate}</span>
