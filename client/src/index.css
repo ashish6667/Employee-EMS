@@ -228,7 +228,20 @@ h1, h2, h3, h4, h5, h6 {
 .nav-user {
   display: flex;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1rem;
+}
+
+.nav-date-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .user-badge {
@@ -488,6 +501,21 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-1px);
 }
 
+.btn-search {
+  padding: 0.8rem 1.4rem;
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-search:hover {
+  background: var(--accent-gradient-hover);
+}
+
 /* ==========================================================================
    EMS EXECUTIVE DASHBOARD STYLES - FULL WIDTH
    ========================================================================== */
@@ -621,6 +649,39 @@ h1, h2, h3, h4, h5, h6 {
 .text-rose { color: var(--error-text) !important; }
 .text-accent { color: var(--accent-primary) !important; }
 .text-muted { color: var(--text-muted) !important; }
+
+/* Activity Feed List */
+.activity-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.activity-feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+}
+
+.activity-feed-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-feed-text span {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.activity-feed-text small {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
 
 /* Dashboard Grid Layout - Full Width */
 .dashboard-grid {
@@ -899,6 +960,47 @@ h1, h2, h3, h4, h5, h6 {
   animation: fadeIn 0.35s ease-out;
 }
 
+/* Summary Telemetry Bar */
+.directory-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.summary-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+}
+
+.summary-stat-divider {
+  width: 1px;
+  height: 32px;
+  background: #e2e8f0;
+}
+
 .directory-header {
   display: flex;
   align-items: center;
@@ -1103,6 +1205,113 @@ h1, h2, h3, h4, h5, h6 {
   background: #ffffff;
   color: var(--accent-primary);
   box-shadow: var(--shadow-sm);
+}
+
+/* Pagination Controls Styling */
+.pagination-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.6rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.925rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pagination-info span {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.page-size-selector select {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-xs);
+  background: #ffffff;
+  color: var(--text-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.page-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-nav-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.page-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-num-btn {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-num-btn:hover:not(.active) {
+  background: #f8fafc;
+  color: var(--accent-primary);
+}
+
+.page-num-btn.active {
+  background: var(--accent-gradient);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
 }
 
 /* Grid Cards Layout - Full Width Responsive */

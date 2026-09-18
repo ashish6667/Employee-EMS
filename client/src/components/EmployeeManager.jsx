@@ -20,10 +20,13 @@ import {
   LayoutGrid,
   List,
   Eye,
-  FileSpreadsheet,
   Download,
   ShieldAlert,
-  ChevronRight
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Printer,
+  Sparkles
 } from 'lucide-react';
 
 const DEPARTMENTS = ['All', 'Engineering', 'HR', 'Finance', 'Marketing', 'Sales', 'IT'];
@@ -35,7 +38,12 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
   const [search, setSearch] = useState('');
   const [selectedDept, setSelectedDept] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [sortBy, setSortBy] = useState('name-asc');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   // Alert banner
   const [alert, setAlert] = useState(null); // { type: 'success'|'error', text: '' }
@@ -84,6 +92,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
         },
       });
       setEmployees(res.data);
+      setCurrentPage(1); // Reset to page 1 on fetch
     } catch (err) {
       console.error('Failed to load employees', err);
       showAlert('error', err.response?.data?.message || 'Failed to fetch employees list.');
@@ -108,6 +117,27 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
     setAlert({ type, text });
     setTimeout(() => setAlert(null), 5000);
   };
+
+  // Sort Employees Logic
+  const sortedEmployees = [...employees].sort((a, b) => {
+    if (sortBy === 'name-asc') return (a.fullName || '').localeCompare(b.fullName || '');
+    if (sortBy === 'name-desc') return (b.fullName || '').localeCompare(a.fullName || '');
+    if (sortBy === 'salary-desc') return (b.salary || 0) - (a.salary || 0);
+    if (sortBy === 'salary-asc') return (a.salary || 0) - (b.salary || 0);
+    if (sortBy === 'hireDate-desc') return new Date(b.hireDate || 0) - new Date(a.hireDate || 0);
+    if (sortBy === 'hireDate-asc') return new Date(a.hireDate || 0) - new Date(b.hireDate || 0);
+    return 0;
+  });
+
+  // Pagination Slice
+  const totalRecords = sortedEmployees.length;
+  const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedEmployees = sortedEmployees.slice(startIndex, startIndex + pageSize);
+
+  // Quick Directory Telemetry Metrics
+  const activeCount = employees.filter((e) => e.status === 'Active').length;
+  const totalPayrollBudget = employees.reduce((acc, curr) => acc + (curr.salary || 0), 0);
 
   const openCreateModal = () => {
     setEditingEmp(null);
@@ -200,6 +230,10 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
     }
   };
 
+  const handlePrintDossier = () => {
+    window.print();
+  };
+
   const getInitials = (firstName, lastName) => {
     const f = firstName ? firstName[0] : '';
     const l = lastName ? lastName[0] : '';
@@ -249,11 +283,29 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
         </div>
       )}
 
+      {/* Directory Telemetry Quick Summary Bar */}
+      <div className="directory-summary-bar">
+        <div className="summary-stat-item">
+          <span className="stat-label">Total Records</span>
+          <span className="stat-value">{totalRecords} Staff</span>
+        </div>
+        <div className="summary-stat-divider" />
+        <div className="summary-stat-item">
+          <span className="stat-label">Active Headcount</span>
+          <span className="stat-value text-emerald">{activeCount} Active</span>
+        </div>
+        <div className="summary-stat-divider" />
+        <div className="summary-stat-item">
+          <span className="stat-label">Total Annual Budget</span>
+          <span className="stat-value text-purple">{formatCurrency(totalPayrollBudget)}</span>
+        </div>
+      </div>
+
       {/* Directory Action Header */}
       <div className="directory-header">
         <div className="header-title-group">
           <h2>Workforce Directory</h2>
-          <span className="count-pill">{employees.length} records</span>
+          <span className="count-pill">{totalRecords} Records</span>
         </div>
 
         <div className="header-action-group">
@@ -276,7 +328,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
             <input
               type="text"
               className="search-input"
-              placeholder="Search by name, email, or position..."
+              placeholder="Search by name, email, department, or job title..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -328,6 +380,23 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
             </select>
           </div>
 
+          {/* Sort Control Dropdown */}
+          <div className="dept-select-wrapper">
+            <ArrowUpDown size={16} className="select-icon" />
+            <select
+              className="dept-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="name-asc">Sort: Name (A-Z)</option>
+              <option value="name-desc">Sort: Name (Z-A)</option>
+              <option value="salary-desc">Sort: Salary (High to Low)</option>
+              <option value="salary-asc">Sort: Salary (Low to High)</option>
+              <option value="hireDate-desc">Sort: Hire Date (Newest)</option>
+              <option value="hireDate-asc">Sort: Hire Date (Oldest)</option>
+            </select>
+          </div>
+
           {/* View Mode Switcher */}
           <div className="view-mode-toggle">
             <button
@@ -358,19 +427,19 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
           <div className="spinner-large" />
           <p>Fetching workforce database records...</p>
         </div>
-      ) : employees.length === 0 ? (
+      ) : totalRecords === 0 ? (
         <div className="empty-state-card">
           <Users size={48} className="text-muted" />
           <h3>No Employee Records Found</h3>
           <p>No employee profiles match your selected search criteria or filters.</p>
-          <button className="btn btn-secondary" onClick={() => { setSearch(''); setSelectedDept('All'); setSelectedStatus('All'); }}>
+          <button className="btn btn-secondary" onClick={() => { setSearch(''); setSelectedDept('All'); setSelectedStatus('All'); setSortBy('name-asc'); }}>
             Reset Filters
           </button>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID CARDS VIEW */
         <div className="employee-cards-grid">
-          {employees.map((emp) => (
+          {paginatedEmployees.map((emp) => (
             <div key={emp.id} className="employee-card">
               <div className="card-top-row">
                 <div className="avatar-circle">{getInitials(emp.firstName, emp.lastName)}</div>
@@ -385,27 +454,27 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                 </h3>
                 <p className="emp-position">{emp.position}</p>
                 <div className="emp-dept-pill">
-                  <Building2 size={12} />
+                  <Building2 size={14} />
                   <span>{emp.department}</span>
                 </div>
 
                 <div className="card-meta">
                   <div className="meta-row">
-                    <Mail size={14} className="meta-icon" />
+                    <Mail size={15} className="meta-icon" />
                     <a href={`mailto:${emp.email}`} className="meta-text hover-link">
                       {emp.email}
                     </a>
                   </div>
                   {emp.phone && (
                     <div className="meta-row">
-                      <Phone size={14} className="meta-icon" />
+                      <Phone size={15} className="meta-icon" />
                       <a href={`tel:${emp.phone}`} className="meta-text hover-link">
                         {emp.phone}
                       </a>
                     </div>
                   )}
                   <div className="meta-row">
-                    <DollarSign size={14} className="meta-icon text-purple" />
+                    <DollarSign size={15} className="meta-icon text-purple" />
                     <span className="meta-text text-purple font-semibold">
                       {formatCurrency(emp.salary)} / yr
                     </span>
@@ -419,7 +488,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                   onClick={() => setViewingEmp(emp)}
                   title="View Profile Details"
                 >
-                  <Eye size={14} />
+                  <Eye size={15} />
                   View
                 </button>
                 <button
@@ -427,7 +496,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                   onClick={() => openEditModal(emp)}
                   title="Edit Record"
                 >
-                  <Edit2 size={14} />
+                  <Edit2 size={15} />
                   Edit
                 </button>
                 <button
@@ -435,7 +504,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                   onClick={() => setDeletingEmp(emp)}
                   title="Delete Record"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={15} />
                   Delete
                 </button>
               </div>
@@ -459,7 +528,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp) => (
+              {paginatedEmployees.map((emp) => (
                 <tr key={emp.id} className="table-row">
                   <td>
                     <div className="table-user-cell" onClick={() => setViewingEmp(emp)}>
@@ -490,13 +559,13 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                   <td style={{ textAlign: 'right' }}>
                     <div className="table-actions">
                       <button className="icon-btn-sm btn-view" onClick={() => setViewingEmp(emp)} title="View Details">
-                        <Eye size={14} />
+                        <Eye size={15} />
                       </button>
                       <button className="icon-btn-sm btn-edit" onClick={() => openEditModal(emp)} title="Edit Employee">
-                        <Edit2 size={14} />
+                        <Edit2 size={15} />
                       </button>
                       <button className="icon-btn-sm btn-delete" onClick={() => setDeletingEmp(emp)} title="Delete Employee">
-                        <Trash2 size={14} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </td>
@@ -504,6 +573,62 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination Footer Controls */}
+      {totalRecords > 0 && (
+        <div className="pagination-card">
+          <div className="pagination-info">
+            Showing <span>{startIndex + 1}</span> to <span>{Math.min(startIndex + pageSize, totalRecords)}</span> of <span>{totalRecords}</span> entries
+          </div>
+
+          <div className="pagination-controls">
+            <div className="page-size-selector">
+              <label>Rows per page:</label>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={8}>8</option>
+                <option value={12}>12</option>
+
+                <option value={24}>24</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="pagination-buttons">
+              <button
+                className="page-nav-btn"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                <ChevronLeft size={16} /> Prev
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  className={`page-num-btn ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                className="page-nav-btn"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -563,7 +688,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                     className="form-input"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+91 98765 43210"
                   />
                 </div>
               </div>
@@ -607,7 +732,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                     className="form-input"
                     value={formData.salary}
                     onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                    placeholder="e.g. 110000"
+                    placeholder="e.g. 1200000"
                   />
                 </div>
                 <div className="form-group">
@@ -655,7 +780,7 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
         <div className="modal-backdrop" onClick={() => setViewingEmp(null)}>
           <div className="modal-card modal-profile" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Employee Dossier</h3>
+              <h3>Employee Dossier & Details</h3>
               <button className="modal-close" onClick={() => setViewingEmp(null)}>
                 <X size={18} />
               </button>
@@ -695,14 +820,14 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
 
                 <div className="detail-item">
                   <div className="item-label">
-                    <DollarSign size={14} /> Compensation
+                    <DollarSign size={14} /> Annual Compensation
                   </div>
                   <div className="item-value font-bold text-purple">{formatCurrency(viewingEmp.salary)} / year</div>
                 </div>
 
                 <div className="detail-item">
                   <div className="item-label">
-                    <Calendar size={14} /> Date of Hire
+                    <Calendar size={14} /> Date of Joining
                   </div>
                   <div className="item-value">{formatDate(viewingEmp.hireDate)}</div>
                 </div>
@@ -713,12 +838,15 @@ const EmployeeManager = ({ isAddModalOpenFromParent, onCloseParentAddModal }) =>
                 </div>
 
                 <div className="detail-item">
-                  <div className="item-label">System Created</div>
-                  <div className="item-value">{formatDate(viewingEmp.createdAt)}</div>
+                  <div className="item-label">System Audit Status</div>
+                  <div className="item-value text-emerald font-semibold">Verified Active</div>
                 </div>
               </div>
 
               <div className="modal-actions">
+                <button className="btn btn-secondary" onClick={handlePrintDossier}>
+                  <Printer size={16} /> Print Dossier
+                </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => {
